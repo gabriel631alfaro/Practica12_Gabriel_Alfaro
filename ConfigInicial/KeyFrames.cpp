@@ -1,7 +1,7 @@
 /*
 Previo 12. Animación por KeyFrames               Alfaro Fragoso José Gabriel
 
-Fecha de entrega: 27 de abril de 2025                     317019450
+Fecha de entrega: 26 de abril de 2025                     317019450
 */
 
 #include <iostream>
