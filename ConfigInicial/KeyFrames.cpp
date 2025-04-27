@@ -134,6 +134,14 @@ typedef struct _frame { //se guardan os calores
 	float incZ;
 	float head; // se agregan para move la cabeza 
 	float headInc;
+	//cola 
+	float tail;
+	float tailInc;
+	//Patas 
+	float FLegs;
+	float FLegsInc;
+	float RLegs;
+	float RLegsInc;
 
 
 }FRAME;
@@ -154,6 +162,11 @@ void saveFrame(void) //guardar info delos Kayframe
 
 	KeyFrame[FrameIndex].rotDog = rotDog;
 	KeyFrame[FrameIndex].head = head;//para mover la cabeza 
+	KeyFrame[FrameIndex].tail = tail; //cola
+	//Patas
+	KeyFrame[FrameIndex].FLegs = FLegs;
+	KeyFrame[FrameIndex].RLegs = RLegs;
+
 
 	FrameIndex++;
 }
@@ -163,9 +176,14 @@ void resetElements(void) //reinicializar la posiicón inicial
 	dogPosX = KeyFrame[0].dogPosX;
 	dogPosY = KeyFrame[0].dogPosY;
 	dogPosZ = KeyFrame[0].dogPosZ;
-	head = KeyFrame[0].head;//Inicalizar la animación
 
+	head = KeyFrame[0].head;//Inicalizar la animación
+	tail = KeyFrame[0].tail; //Cola
+
+	//Patas 
+	FLegs = KeyFrame[0].FLegs;
 	rotDog = KeyFrame[0].rotDog;
+	RLegs = KeyFrame[0].RLegs;
 
 }
 void interpolation(void) //interpolacón entre keyframe calclando el incremento 
@@ -175,6 +193,9 @@ void interpolation(void) //interpolacón entre keyframe calclando el incremento
 	KeyFrame[playIndex].incY = (KeyFrame[playIndex + 1].dogPosY - KeyFrame[playIndex].dogPosY) / i_max_steps;
 	KeyFrame[playIndex].incZ = (KeyFrame[playIndex + 1].dogPosZ - KeyFrame[playIndex].dogPosZ) / i_max_steps;
 	KeyFrame[playIndex].headInc = (KeyFrame[playIndex + 1].head - KeyFrame[playIndex].head) / i_max_steps;
+	KeyFrame[playIndex].tailInc = (KeyFrame[playIndex + 1].tail - KeyFrame[playIndex].tail) / i_max_steps; //Cola
+	KeyFrame[playIndex].FLegsInc = (KeyFrame[playIndex + 1].FLegs - KeyFrame[playIndex].FLegs) / i_max_steps; //FLegs
+	KeyFrame[playIndex].RLegsInc = (KeyFrame[playIndex + 1].RLegs - KeyFrame[playIndex].RLegs) / i_max_steps; //RLegs
 	KeyFrame[playIndex].rotDogInc = (KeyFrame[playIndex + 1].rotDog - KeyFrame[playIndex].rotDog) / i_max_steps;
 
 }
@@ -261,6 +282,12 @@ int main()
 		KeyFrame[i].rotDogInc = 0;
 		KeyFrame[i].head = 0;
 		KeyFrame[i].headInc = 0; //para incrementar el Keyframe de la cabeza 
+		//Cola
+		KeyFrame[i].tail = 0;
+		KeyFrame[i].tailInc = 0;
+		//Patas
+		KeyFrame[i].FLegs = 0;
+		KeyFrame[i].FLegsInc = 0;
 
 	}
 
@@ -395,13 +422,13 @@ int main()
 		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 0);
 		//Body
 		modelTemp= model = glm::translate(model, glm::vec3(dogPosX,dogPosY,dogPosZ));
-		modelTemp= model = glm::rotate(model, glm::radians(rotDog), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelTemp= model = glm::rotate(model, glm::radians(rotDog), glm::vec3(1.0f, 0.0f, 0.0f)); // Se cambia el eje de rotación del cuerpo 
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		DogBody.Draw(lightingShader);
 		//Head
 		model = modelTemp;
 		model = glm::translate(model, glm::vec3(0.0f, 0.093f, 0.208f));
-		model = glm::rotate(model, glm::radians(head), glm::vec3(0.0f, 0.0f, 1.0f));
+		model = glm::rotate(model, glm::radians(head), glm::vec3(1.0f, 0.0f, 0.0f));//Cambia la rotación de la cabeza 
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		HeadDog.Draw(lightingShader);
 		//Tail 
@@ -413,7 +440,7 @@ int main()
 		//Front Left Leg
 		model = modelTemp;
 		model = glm::translate(model, glm::vec3(0.112f, -0.044f, 0.074f));
-		model = glm::rotate(model, glm::radians(FLegs), glm::vec3(-1.0f, 0.0f, 0.0f)); 
+		//model = glm::rotate(model, glm::radians(FLegs), glm::vec3(-0.5f, 0.0f, 0.0f)); 
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		F_LeftLeg.Draw(lightingShader);
 		//Front Right Leg
@@ -431,20 +458,20 @@ int main()
 		//Back Right Leg
 		model = modelTemp; 
 		model = glm::translate(model, glm::vec3(-0.083f, -0.057f, -0.231f));
-		model = glm::rotate(model, glm::radians(RLegs), glm::vec3(-1.0f, 0.0f, 0.0f));
+		model = glm::rotate(model, glm::radians(RLegs), glm::vec3(1.0f, 0.0f, 0.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		B_RightLeg.Draw(lightingShader); 
 
 
-		model = glm::mat4(1);
-		glEnable(GL_BLEND);//Avtiva la funcionalidad para trabajar el canal alfa
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 1);
-		model = glm::rotate(model, glm::radians(rotBall), glm::vec3(0.0f, 1.0f, 0.0f));
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-	    Ball.Draw(lightingShader); 
-		glDisable(GL_BLEND);  //Desactiva el canal alfa 
+		//model = glm::mat4(1);
+		//glEnable(GL_BLEND);//Avtiva la funcionalidad para trabajar el canal alfa
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		//glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 1);
+		//model = glm::rotate(model, glm::radians(rotBall), glm::vec3(0.0f, 1.0f, 0.0f));
+		//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	 //   Ball.Draw(lightingShader); 
+		//glDisable(GL_BLEND);  //Desactiva el canal alfa 
 		glBindVertexArray(0);
 	
 
@@ -494,31 +521,73 @@ void DoMovement()
 {
 	//Dog Controls
 	
-	if (keys[GLFW_KEY_2])
+	if (keys[GLFW_KEY_1])
 	{
 		
 			rotDog += 0.5f;
 
 	}
+	if (keys[GLFW_KEY_2])
+	{
 
-	if (keys[GLFW_KEY_4])
+		rotDog -= 0.5f;
+
+	}
+
+	if (keys[GLFW_KEY_3])
 	{
 		
 			head -= 0.5f;
 
 	}
 
-	if (keys[GLFW_KEY_5])
+	if (keys[GLFW_KEY_4])
 	{
 
 			head += 0.5f;
 
 	}
 
-	if (keys[GLFW_KEY_3])
+	//cola 
+	if (keys[GLFW_KEY_5])
 	{
 
-		rotDog -= 0.5f;
+		tail -= 0.5f;
+
+	}
+
+	if (keys[GLFW_KEY_6])
+	{
+
+		tail += 0.5f;
+
+	}
+	//FLegs
+	if (keys[GLFW_KEY_7])
+	{
+
+		FLegs -= 0.5f;
+
+	}
+
+	if (keys[GLFW_KEY_8])
+	{
+
+		FLegs += 0.5f;
+
+	}
+	//RLegs
+	if (keys[GLFW_KEY_9])
+	{
+
+		RLegs -= 0.5f;
+
+	}
+
+	if (keys[GLFW_KEY_0])
+	{
+
+		RLegs += 0.5f;
 
 	}
 			
@@ -694,7 +763,9 @@ void Animation() {
 			dogPosY += KeyFrame[playIndex].incY;
 			dogPosZ += KeyFrame[playIndex].incZ;
 			head += KeyFrame[playIndex].headInc; //para visualizar la animación 
-
+			tail += KeyFrame[playIndex].tailInc; //Cola 
+			FLegs += KeyFrame[playIndex].FLegsInc; //Patas
+			RLegs += KeyFrame[playIndex].RLegsInc; //Patas
 
 			rotDog += KeyFrame[playIndex].rotDogInc;
 
